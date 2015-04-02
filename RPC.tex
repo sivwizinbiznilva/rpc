@@ -413,16 +413,22 @@
 \IEEEpeerreviewmaketitle
 
 \section{Introduction}
+Ever increasing computational complexity can create situations in which a total software solution will bog down a general-purpose CPU to the point of impracticality. One mechanism used to mitigate such situations is the use of hardware accelerators, i.e., offloading specific computational tasks to hardware. Developing hardware solutions to replace software comes with the trade-off of increased development time due to the introduction of hardware's inherent lower abstraction levels. This increased overhead can often be prohibitive, thus it has been a dream of hardware designers since the 1970s to create a tool that will allow for the synthesis of reliable hardware using traditional software development techniques\cite{1}. This dream tool would complete a process known as High Level Synthesis (HLS).
+
+In order to consider the dream realized, logic synthesis must operate reliably using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. Unfortunately, due to reasons such as standardization\cite{ieee}, reliability\cite{tosun} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions (VHDL and Verilog) do not operate natively at the algorithmic level \cite{Harris+Harris}. This presents a problem: the most oft-used, best supported, languages for specifying synthesizable hardware do not behave like that of traditional compiled software. These two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}, and HLS seeks to bridge that gap.
+
+The development of HLS tools is not the focus of Homsirikamol and Gaj's study, rather they seek to validate the state of the HLS dream by comparing the performance of hardware generated using an RTL circuit description to that of an algorithmic, HLS, specification. This report will explain the methodology used to conduct the case study and evaluate its conclusions based on alternative methods of comparison, ultimately presenting a more complete picture of whether HLS is a dream-come-true.
+
+
+\section{Background}
 %The term ``synthesis'' can be used to reference either the process of traversing abstraction levels in hardware design or as the process of mapping a behavioral description into a structural layout. The former definition is accomplished by implementing a description found at a higher level of abstraction using only methods found in the lower level, and serves as the focus of this review\cite{churtl}. The two most ubiquitous languages for creating such a hardware description are VHDL and Verilog \cite{Harris+Harris}. These two languages operate at a level of abstraction known as  The implementation of a hardware design using an abstract description of High-level synthesis (HLS) is a tool for developing  \cite{churtl}
 %In the beginning, there was a dream. That dream was to synthesize reliable hardware using traditional software development techniques\cite{3}. In order to accomplish this, logic synthesis would be required to operate reliably using an algorithmic-level description as the primary input specification\cite{mcfarland}. In the case of High-Level Synthesis (HLS), the term ``synthesis'' can be defined as the process of traversing abstraction levels in hardware design and is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. The two most ubiquitous languages for creating such a hardware description are VHDL and Verilog \cite{Harris+Harris}. The problem is that these languages do not operate natively on the algorithmic level, i.e., the synthesis of VHDL and Verilog does not resemble that of traditional compiled software. These two languages operate at a level of abstraction known as the Register-Transfer Level (RTL) \cite{vahid}.  The implementation of a hardware design using an abstract description of High-level synthesis (HLS) is a tool for developing  \cite{churtl}
 
-\indent The synthesis of reliable hardware using traditional software development techniques has been a dream of hardware engineers since the early 1970s\cite{1}. In order to consider this dream realized, logic synthesis must operate reliably using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. For reasons such as standardization\cite{ieee} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions are VHDL and Verilog \cite{Harris+Harris}. The problem is that these languages do not operate natively on the algorithmic level, i.e., the synthesis of VHDL and Verilog does not behave like that of traditional compiled software. These two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}. 
+HLS is the process of converting an algorithmic level description to RTL. Therefore, in this context the term  ``synthesis'' can be defined as a method of traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level, often written in a relatively high-level language like C, to a functionally equivalent representation in an RTL language like VHDL or Verilog.
 
-High Level Synthesis (HLS) is the process of converting an algorithmic level description to RTL. Therefore, in this context the term  ``synthesis'' can be defined as the process of traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level, often written in a relatively high-level language like C, to a functionally equivalent representation in an RTL language like VHDL or Verilog.
+Measuring the quality of HLS tools is often accomplished by comparing the performance of synthesized hardware generated by HLS tools versus that of RTL. Since computational challenges vary greatly based on functional domain, the authors of the selected paper claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to  make blanket statements of a tool's ability without, first, specifying the domain in which an HLS-to-RTL comparison is made. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard (AES).
 
-
-\cite{1}\cite{3}\cite{4}\cite{5}\cite{6}\cite{7}\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}\cite{13}\cite{14}\cite{15}\cite{16}\cite{17}\cite{18}\cite{19}\cite{20}
-\subsection{Introduction}
+\section{Problem Statement}
 \IEEEPARstart{I}{t} is
 difficult to imagine a computer engineer having to create a VLSI layout and
 fabricate an ASIC every time they wanted to run a C program. While there will
@@ -851,12 +857,12 @@ and the pH to Vsol (assuming a constant drain current)
 \bibliography{IEEEabrv,../bibtex_files/RPC.bib,../bibtex_files/Connecting_Ideas,../bibtex_files/Rethink_Toward_GP_uF_Chips,../bibtex_files/mf.bib,../bibtex_files/ece.bib,../bibtex_files/sb.bib}
 
 %Bio Section
-\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{chick.jpg}}]{Ryan Silva}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{silva_official_photo.jpg}}]{Ryan Silva}
 % or if you just want to reserve a space for a photo:
 %\begin{IEEEbiography}{Michael Shell}
 %Biography text here.
 	Ryan Silva is a Captain on active-duty in the United States Air Force.
-	He current assignment is at Boston University where is pursuing his
+	He is currently assigned to Boston University, where is pursuing his
 	PhD in Computer Engineering. After graduating with his degree, Ryan
 	will be assigned to an Air Force unit before returning to teach at the
 	United States Air Force Academy, where he graduated with a degree in
