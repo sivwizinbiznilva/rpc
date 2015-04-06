@@ -1,73 +1,41 @@
-%% bare_jrnl_compsoc.tex
-%% V1.4
-%% 2012/12/27
-%% by Michael Shell
-%% See:
-%% http://www.michaelshell.org/
-%% for current contact information.
-%%
-%% This is a skeleton file demonstrating the use of IEEEtran.cls
-%% (requires IEEEtran.cls version 1.8 or later) with an IEEE Computer
-%% Society journal paper.
-%%
-%% Support sites:
-%% http://www.michaelshell.org/tex/ieeetran/
-%% http://www.ctan.org/tex-archive/macros/latex/contrib/IEEEtran/
-%% and
-%% http://www.ieee.org/
-
-%%*************************************************************************
-%% Legal Notice:
-%% This code is offered as-is without any warranty either expressed or
-%% implied; without even the implied warranty of MERCHANTABILITY or
-%% FITNESS FOR A PARTICULAR PURPOSE! 
-%% User assumes all risk.
-%% In no event shall IEEE or any contributor to this code be liable for
-%% any damages or losses, including, but not limited to, incidental,
-%% consequential, or any other damages, resulting from the use or misuse
-%% of any information contained here.
-%%
-%% All comments are the opinions of their respective authors and are not
-%% necessarily endorsed by the IEEE.
-%%
-%% This work is distributed under the LaTeX Project Public License (LPPL)
-%% ( http://www.latex-project.org/ ) version 1.3, and may be freely used,
-%% distributed and modified. A copy of the LPPL, version 1.3, is included
-%% in the base LaTeX documentation of all distributions of LaTeX released
-%% 2003/12/01 or later.
-%% Retain all contribution notices and credits.
-%% ** Modified files should be clearly indicated as such, including  **
-%% ** renaming them and changing author support contact information. **
-%%
-%% File list of work: IEEEtran.cls, IEEEtran_HOWTO.pdf, bare_adv.tex,
-%%                    bare_conf.tex, bare_jrnl.tex, bare_jrnl_compsoc.tex,
-%%                    bare_jrnl_transmag.tex
-%%*************************************************************************
-
-% *** Authors should verify (and, if needed, correct) their LaTeX system  ***
-% *** with the testflow diagnostic prior to trusting their LaTeX platform ***
-% *** with production work. IEEE's font choices can trigger bugs that do  ***
-% *** not appear when using other class files.                            ***
-% The testflow support page is at:
-% http://www.michaelshell.org/tex/testflow/
-
-
-
-
-% Note that the a4paper option is mainly intended so that authors in
-% countries using A4 can easily print to A4 and see how their papers will
-% look in print - the typesetting of the document will not typically be
-% affected with changes in paper size (but the bottom and side margins will).
-% Use the testflow package mentioned above to verify correct handling of
-% both paper sizes by the user's LaTeX system.
-%
-% Also note that the "draftcls" or "draftclsnofoot", not "draft", option
-% should be used if it is desired that the figures are to be displayed in
-% draft mode.
-%
-% The Computer Society usually requires 12pt for submissions.
-%
 \documentclass[11pt,journal,compsoc, onecolumn]{IEEEtran}
+\usepackage{listings}
+\usepackage{color}
+
+
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{myred}{rgb}{0.6,0,0}
+
+
+
+\lstset{ %
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\normalsize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,                    % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{mygreen},       % keyword style
+  language=C,                 % the language of the code
+  otherkeywords={*,...},            % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{myred},     % string literal style
+  tabsize=2,                       % sets default tabsize to 2 spaces
+  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+}
 %
 % If IEEEtran.cls has not been installed into the LaTeX system files,
 % manually specify the path to it like:
@@ -429,18 +397,47 @@ HLS is the process of converting an algorithmic level description to RTL. Theref
 Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above metrics for quality (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to  make blanket statements of a tool's ability without, first, specifying the domain in which an HLS-to-RTL comparison is made. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard (AES) in Counter Mode (AES-CTR).
 
 \section{The Advanced Encryption Standard in Counter Mode}
-This section will give a very brief overview of AES and, most importantly, emphasize the synthesis challenges presented by each stage of the encryption process. Additionally, this section will briefly explain what it means to operate AES in Counter Mode.
+This section gives a very brief overview of AES and, most importantly, emphasizes specific synthesis challenges presented during each stage of the encryption process. Additionally, this section will briefly explain what it means to operate AES in Counter Mode.
+
+AES is a symmetric key block cipher encryption algorithm that operates on 128-bit blocks of data using keys of length 128, 192 or 256 bits; however, the authors chose to only consider implementations of the algorithm using 128-bit keys. The algorithm uses four main transformation functions to provide cryptographic diffusion: SubBytes, ShiftRows, MixColumns and AddRoundKey. ShiftRows is the least computationally intensive of the transformations and simply involves rotating bytes in an array. SubBytes requires significantly more computation to determine modular inversions in a finite field as well as perform an affine transformation; although, since SubBytes is performed on individual bytes, the calculations can be carried out by pre-computing all possible values and then referencing a $2^8=256byte$ lookup table. AddRoundKey uses the same lookup table, also called a Rijndael S-box \cite{16}, from the SubBytes transformation
+Listing \ref{lst:alg} outlines the order in which the transformations occur. 
+\begin{lstlisting}[captionpos=b,language=c, frame=single,caption={AES Pseudo Code (reproduced from \cite{13})},label={lst:alg},keywordstyle=\color{black}]
+Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
+begin
+	byte state[4,Nb]
+
+	state = in
+
+	AddRoundKey(state, w[0, Nb-1])
+
+	for round = 1 step 1 to Nr–1
+		SubBytes(state)
+		ShiftRows(state)
+		MixColumns(state)
+		AddRoundKey(state, w[round*Nb, (round+1)*Nb-1])
+	end for
+
+	SubBytes(state)
+	ShiftRows(state)
+	AddRoundKey(state, w[Nr*Nb, (Nr+1)*Nb-1])
+
+	out = state
+end
+\end{lstlisting}
 \section{Methodology}
 Synthesis tools vary greatly across technology and corporate barriers, therefore comparing implementations of synthesized designs becomes a delicate exercise. The authors present a case that their methodology for comparing synthesis performance is a fair one and this section explores that claim.
+Homsirikamol and Gaj limit their analysis to AES using a 128-bit key (AES-128). This restriction allowed them to remove from the reference ANSI C design all code supporting other key lengths\cite{17}. This streamlined AES code is used as the baseline input to HLS and is referred to by the authors as HLSv0.
 \section{Results}
 \subsection{HLSv0}
 \subsection{HLSv1}
 \subsection{HLSv2}
 \section{Discussion}
 \subsection{Abstraction}
-A design process cannot claim to operate at a level of abstraction higher than the lowest layer presented to the designer.
+A design process cannot claim to operate at a level of abstraction higher than the lowest layer presented to the designer. The use of pragmas that describe reduced latency in terms of operations executed per clock cycle, by definition, lower the level of abstraction from algorithmic to RTL.
 \subsection{Prior Findings}
 It takes guts to show up with results that contradict a study published in the same conference one year prior\cite{skalicky}..
+\subsection{RTL Code}
+The control for this case study, i.e. the RTL code in VHDL, was never specified beyond naming the utilized HDL. Important design decisions and modifications to the RTL descriptions, if any, were conspicuously missing from the document. For example, the authors never mention refining the VHDL as they refine the HLS code. They also never mention what implementation design decisions they made in implementing the algorithm in VHDL. Did they use an S-Box (look-up table) to accomplish SubBytes? Or did they calculate the affine transform? Parallelization? Timing constraints?  
 \section{Conclusion}
  is
 difficult to imagine a computer engineer having to create a VLSI layout and
@@ -882,5 +879,4 @@ and the pH to Vsol (assuming a constant drain current)
 	Electrical Engineering in 2005.
 \end{IEEEbiography}
 \end{document}
-
 
