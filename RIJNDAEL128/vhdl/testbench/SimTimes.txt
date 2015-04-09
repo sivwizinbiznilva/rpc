@@ -1,0 +1,7 @@
+vk_iter:   100000 (enc)
+           260000 (dec)
+vk_pipe:   8100   (enc)
+           7000   (dec)
+vt_iter:   70000
+vt_pipe:   6000   (enc)
+           7000   (dec)

@@ -381,7 +381,7 @@
 \IEEEpeerreviewmaketitle
 
 \section{Introduction}
-\IEEEPARstart{E}{ver-increasing} computational complexity creates situations in which the demands of pure software solutions bog down a general-purpose CPU to the point of impracticality. One mechanism used to mitigate such situations is through the use of hardware accelerators, i.e., offloading specific computational tasks to hardware. Developing hardware solutions to replace software comes with the trade-off of increased development time due to the introduction of hardware's inherent lower abstraction levels. This increased overhead can often be prohibitive, thus it has been a dream of hardware designers since the 1970s to create tools that reliably synthesize hardware using traditional software development techniques\cite{1}. This dream tool would complete a process known as High Level Synthesis (HLS).
+\IEEEPARstart{E}{ver-increasing} computational complexity creates situations in which the demands of pure software solutions bog down a general-purpose CPU to the point of impracticality\cite{skalicky}. One mechanism used to mitigate such situations is through the use of hardware accelerators, i.e., offloading specific computational tasks to hardware. Developing hardware solutions to replace software comes with the trade-off of increased development time due to the introduction of hardware's inherent lower abstraction levels. This increased overhead can often be prohibitive, thus it has been a dream of hardware designers since the 1970s to create tools that reliably synthesize hardware using traditional software development techniques\cite{1}. This dream tool would complete a process known as High Level Synthesis (HLS).
 
 In order to consider the dream realized, logic synthesis must operate reliably using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. Unfortunately, due to reasons such as standardization\cite{ieee}, reliability\cite{tosun} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions (VHDL and Verilog) do not operate natively at the algorithmic level \cite{Harris+Harris}. This presents a problem: the most oft-used, best supported, languages for specifying synthesizable hardware do not behave like that of traditional compiled software. These two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}, and HLS seeks to bridge that gap.
 
@@ -394,31 +394,56 @@ The development of HLS tools is not the focus of Homsirikamol and Gaj's study, r
 
 HLS is the process of converting an algorithmic level description to RTL. Therefore, in this context the term  \textbf{synthesis} can be defined as a method of traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level, often written in a relatively high-level language like C, to a functionally equivalent representation in an RTL language like VHDL or Verilog.
 
-Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above metrics for quality (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to  make blanket statements of a tool's ability without, first, specifying the domain in which an HLS-to-RTL comparison is made. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard (AES) in Counter Mode (AES-CTR).
+Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above metrics for quality (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to  make blanket statements of a tool's ability without, first, specifying the types of computational tasks each method is expected to complete. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard (AES) in Counter Mode (AES-CTR).
 
 \section{The Advanced Encryption Standard in Counter Mode}
-This section defines the cryptographic transformations involved in AES and comments on challenges presented to the synthesizer during each stage of the encryption process. Additionally, this section briefly explains what it means to operate AES in Counter Mode.
+This section defines the cryptographic transformations involved in AES and comments on challenges presented to the synthesizer during each stage of the encryption process. These challenges are framed in the context of the definition of synthesis from Section \ref{sec:background}, which implies that the least difficult HLS-to-RTL transformations are those in which operations are identical in both the algorithmic and RTL levels of abstraction. Difficulty of synthesis increases as divergence of arithmetic methods between the algorithmic and RTL levels increase. Additionally, this section briefly explains what it means to operate AES in Counter Mode. 
 
+\subsection{AES}
+AES is a symmetric key block cipher encryption algorithm that operates on 128-bit blocks of data using keys of length 128, 192 or 256 bits; however, the authors chose to restrict their test designs to implementations of the algorithm using only 128-bit keys\cite{sel}. The algorithm uses four main transformation functions on plaintext to provide cryptographic diffusion: SubBytes, ShiftRows, MixColumns and AddRoundKey. AES also transforms the key according to a function called Key Expansion.
 
-AES is a symmetric key block cipher encryption algorithm that operates on 128-bit blocks of data using keys of length 128, 192 or 256 bits; however, the authors chose to restrict their test designs to implementations of the algorithm using only 128-bit keys. The algorithm uses four main transformation functions to provide cryptographic diffusion: SubBytes, ShiftRows, MixColumns and AddRoundKey. 
+\subsection{Counter Mode}
+\cite{14} describes recommendations for AES operating modes. AES in Counter Mode (AES-CTR) is defined by the following:
 
-\subsection{ShiftRows}
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l l l}
+		CTR Encryption: & $O_j=CIPH_k(T_j)$ & for $j=1,2\dots n;$\\
+		 & $C_j=P_j\oplus O_j$ & for $j=1,2\dots n-1;$\\
+		 & $C^*_n=P^*_n\oplus MSB_u(O_n)$ & \\
+		 \\
+		CTR Decryption: & $O_j=CIPH_k(T_j)$ & for $j=1,2\dots n;$\\
+		 & $P_j=C_j\oplus O_j$ & for $j=1,2\dots n-1;$\\
+		 & $P^*_n=C^*_n\oplus MSB_u(O_n)$ & 
+	\end{tabular}
+	%\caption{Hippo Treat}
+	\label{tab:ctr}
+\end{table}
+
+In the above definition, $O_j$ is the output of the forward AES cipher using distinct counter vectors, $T_j$, as the plaintext on which the cipher operates. $P_j$ is the plaintext and $C_j$ is the ciphertext. $P^*_n$ and $C^*_n$ are the plaintext and ciphertext for the final block. The final block need not be a complete 128-bit block for the cipher to work properly in counter mode. This property is useful for processing streaming data where the input text size is not guaranteed to be a multiple of 128\cite{15}\cite{16}.
+
+The most important attribute of AES-CTR in the context of hardware synthesis is that an implementation of the inverse cipher, $CIPH^{-1}_k(T_j)$, is not required.
+\subsubsection{ShiftRows}\label{sec:shiftrows}
 The ShiftRows transformation is defined by the following operation\cite{13}:
 
 \begin{equation}\label{eq:shiftrows}
-	s^{'}_{r,c}=s_{r,(c+shift(r,4))\text{ mod }4} \text{ for } 0<r<4 \text{ and } 0\leq c<4
+	s^{'}_{r,c}=s_{r,(c+shift(r,4))\text{ mod }4} \text{ for } 0<r<4 \text{ and } 0\leq c<4 
 \end{equation}
 
-The variable $s$ in equation \ref{eq:shiftrows} is a 4x4 array of bytes called the \emph{state array}\cite{13}. This equation effectively describes a byte-wise rotation operation performed on each row of the array. The bytes are rotated left according to the row number (e.g., 0 rotations for row 0, 1 rotation for row 1, etc.). 
+\begin{equation}
+	\text{Where } shift(1,4)=1\text{; } shift(2,4)=2\text{; } shift(3,4)=3
+\end{equation}
 
-According to the definition of \textbf{synthesis} in section \ref{sec:background}, the simplest HLS task is one in which operations are identical in both the algorithmic and RTL levels. The ShiftRows transformation falls within this category as reordering bytes in an array is an operation that exists in both the algorithmic and RTL levels of abstraction.\cite{silva}. 
+The variable $s$ in equation \ref{eq:shiftrows} is a 4x4 array of bytes called the \emph{state array}. This equation effectively describes a byte-wise rotation operation performed on each row of the array. The bytes are rotated left according to the row number (e.g., 0 rotations for row 0, 1 rotation for row 1, etc.). 
 
-\subsection{SubBytes}
-SubBytes is more complex to synthesize than ShiftRows, as it requires Euclid's Extended Algorithm to calculate multiplicative inversions in a finite field, which is an operation not natively found at the RTL level. The algorithm is used to compute the polynomial $b^{-1}(x)$ such that equation \ref{eq:inversion} holds true:
+The ShiftRows transformation is a function that is trivial to synthesize as reordering bytes in an array is an operation that is identical in both the algorithmic and RTL levels of abstraction.\cite{silva}. 
+
+\subsubsection{SubBytes}\label{sec:subbytes}
+SubBytes is more complex to synthesize than ShiftRows, as it requires Euclid's Extended Algorithm to calculate multiplicative inversions in a finite field, which is an operation not natively found in RTL descriptions. The algorithm is used to compute the polynomial $b^{-1}(x)$ such that Equation \ref{eq:inversion} holds true:
 \begin{equation}\label{eq:inversion}
 	a(x)\cdot b(x)\text{ mod }m(x)=1
 \end{equation}
-Once the multiplicative inverse, $x$, is found, the value undergoes an affine transformation according to the operation found in equation \ref{eq:affine}.
+Once the multiplicative inverse, labeled $x$ below, is found the value undergoes an affine transformation according to the operation defined in equation \ref{eq:affine}.
 \begin{equation}\label{eq:affine}
 	\begin{bmatrix}
 		y_0 \\
@@ -464,7 +489,43 @@ Once the multiplicative inverse, $x$, is found, the value undergoes an affine tr
 	\end{bmatrix}
 \end{equation}	
 
-While these calculations would be computationally demanding to execute on the fly\cite{15}, it is important to note that SubBytes is performed on individual bytes; therefore, these calculations can be carried out by pre-computing all possible values and then referencing a 256-byte lookup table. This table is commonly referred to as the Rijndael S-box\cite{13}. The AddRoundKey transformation references the Rijndael S-box, but also requires iterative byte-wise rotations and XOR operations. Since the computational demands of byte-wise substitutions, XORs and rotations can each be computed in a single clock cycle, these are not considered computationally intensive operations when compared to the demands of finite field arithmetic \cite{silva}. MixColumns requires multiplying each four-byte column in the state array, $s$, by a given Maximum Distance Seperable matrix. is the most difficult transformation to compute and is done in the reference code using a giant lut.
+While these calculations would be computationally demanding to execute on the fly\cite{15}, it is important to note that SubBytes is performed on individual bytes; therefore, these calculations can be carried out by pre-computing all possible values and then referencing a 256-byte lookup table called a Rijndael S-box \cite{13}. The authors chose the S-Box method of implementing SubBytes in their HLS descriptions. 
+\subsubsection{AddRoundKey}\label{sec:addroundkey}
+The AddRoundKey transformation is accomplished through a bitwise XOR operation between the state matrix and the expanded key from a Key Expansion \cite{17}. Since bitwise XOR operations are identical in both the algorithmic and RTL levels of abstraction, HLS for the AddRoundKey transformation is a trivial task. 
+
+\subsubsection{Key Expansion}\label{sec:keyexpansion}
+Unlike the other four AES transformations, Key Expansion is performed on the cipher key rather than plaintext. Key Expansion references the Rijndael S-box from Section \ref{sec:subbytes}, but also requires iterative byte-wise rotations and XOR operations with a table of constants. Since the operations for byte-wise substitutions, XORs and rotations are identical in the algorithmic and RTL domains, HLS for Key Expansion is trivial. 
+
+\subsubsection{MixColumns}\label{sec:mixcolumns}
+MixColumns is accomplished by multiplying each four-byte column in the state array by a fixed polynomial, $a(x)=\text{\{03\}}x^3+\text{\{01\}}x^2+\text{\{01\}}x+\text{\{02\}}$, modulo $x^4+1$. This entire operation occurs within a Galois Field, $GF(2^8)$, which can be written as a matrix multiplication\cite{13}:
+
+\begin{equation}\label{eq:mixcolumns}
+	s'(x)=a(x)\otimes s(x):\\
+	\begin{bmatrix}
+		s'_{0,c} \\
+		s'_{1,c} \\
+		s'_{2,c} \\
+		s'_{3,c} 
+	\end{bmatrix}
+	=
+	\begin{bmatrix}
+		02 & 03 & 01 & 01 \\
+		01 & 02 & 03 & 01 \\
+		01 & 01 & 02 & 03 \\
+		03 & 01 & 01 & 02 
+	\end{bmatrix}
+	\begin{bmatrix}
+		s_{0,c} \\
+		s_{1,c} \\
+		s_{2,c} \\
+		s_{3,c} 
+	\end{bmatrix}
+	\text{ for }
+	0\leq c<4
+\end{equation}
+
+Equation \ref{eq:mixcolumns} finally describes a function whereby the methods of implementation could differ from an HLS description to that of an RTL.
+
 Listing \ref{lst:alg} outlines the order in which the transformations occur. 
 \begin{lstlisting}[captionpos=b,language=c, frame=single,caption={AES Pseudo Code (reproduced from \cite{13})},label={lst:alg},keywordstyle=\color{black}]
 Cipher(byte in[4*Nb], byte out[4*Nb], word w[Nb*(Nr+1)])
@@ -495,6 +556,7 @@ Homsirikamol and Gaj limit their analysis to AES using a 128-bit key (AES-128). 
 \section{Results}
 \subsection{HLSv0}
 \subsection{HLSv1}
+Modified MixColumns: because only the encryption algorithm is used for AES-CTR, there are only two constants that need to be multiplied, 0x02 and 0x03. The authors are able to eliminate an entire 256-byte lookup table by implementing these multiplications using xtime.
 \subsection{HLSv2}
 \section{Discussion}
 \subsection{Abstraction}
@@ -503,6 +565,9 @@ A design process cannot claim to operate at a level of abstraction higher than t
 It takes guts to show up with results that contradict a study published in the same conference one year prior\cite{skalicky}..
 \subsection{RTL Code}
 The control for this case study, i.e. the RTL code in VHDL, was never specified beyond naming the utilized HDL. Important design decisions and modifications to the RTL descriptions, if any, were conspicuously missing from the document. For example, the authors never mention refining the VHDL as they refine the HLS code. They also never mention what implementation design decisions they made in implementing the algorithm in VHDL. Did they use an S-Box (look-up table) to accomplish SubBytes? Or did they calculate the affine transform? Parallelization? Timing constraints?  
+For example, the official NSA RTL implementation of AES uses both an iterative and pipelined implementations \cite{nsa}. The performance of the pipelined version of AES was significantly better than the iterative \cite{nsaweeks}.
+\subsection{Parallelization}
+For example, the official NSA RTL implementation of AES uses both an iterative and pipelined implementations \cite{nsa}. The performance of the pipelined version of AES was significantly better than the iterative \cite{nsaweeks}, yet only the iterative RTL approach was considered in this paper. This is because automatic parallelization is a task proven to be NP-Hard due to pointer aliasing \cite{aliasinghard}.
 \section{Conclusion}
  is
 difficult to imagine a computer engineer having to create a VLSI layout and

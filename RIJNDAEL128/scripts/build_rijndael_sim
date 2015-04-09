@@ -1,0 +1,37 @@
+vhdlan -interp ./vhdl/rijndael_pkg.vhdl
+vhdlan -interp ./vhdl/reg32b.vhdl
+vhdlan -interp ./vhdl/array_reg128.vhdl
+vhdlan -interp ./vhdl/expansion_block.vhdl
+vhdlan -interp ./vhdl/initial_expand_block.vhdl
+vhdlan -interp ./vhdl/rijndael_round_block.vhdl
+vhdlan -interp ./vhdl/initial_round_block.vhdl
+vhdlan -interp ./vhdl/final_round_block.vhdl
+vhdlan -interp ./vhdl/box_group_block.vhdl
+vhdlan -interp ./vhdl/nobox_enc_slice.vhdl
+vhdlan -interp ./vhdl/nobox_dec_slice.vhdl
+vhdlan -interp ./vhdl/nobox_enc_group_block.vhdl
+vhdlan -interp ./vhdl/nobox_dec_group_block.vhdl
+vhdlan -interp ./vhdl/key_map_block.vhdl
+vhdlan -interp ./vhdl/input_map128_block.vhdl
+vhdlan -interp ./vhdl/input_map192_block.vhdl
+vhdlan -interp ./vhdl/input_map256_block.vhdl
+vhdlan -interp ./vhdl/alg_pipe.vhdl
+vhdlan -interp ./vhdl/alg_iterative.vhdl
+
+vhdlan -interp ./vhdl/key_sched_pipe.vhdl
+vhdlan -interp ./vhdl/key_sched_iterative.vhdl
+vhdlan -interp ./vhdl/controller_iter.vhdl
+vhdlan -interp ./vhdl/controller_pipe.vhdl
+vhdlan -interp ./vhdl/interface.vhdl
+vhdlan -interp ./vhdl/RIJNDAEL_Top_Pipelined.vhdl
+vhdlan -interp ./vhdl/RIJNDAEL_Top_Iterative.vhdl
+
+vhdlan -interp ./vhdl/testbench/tb_ecb_vk_dec_iter.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vk_enc_iter.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vk_dec_pipe.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vk_enc_pipe.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vt_dec_iter.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vt_enc_iter.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vt_dec_pipe.vhdl
+vhdlan -interp ./vhdl/testbench/tb_ecb_vt_enc_pipe.vhdl
+
