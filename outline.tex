@@ -1,0 +1,60 @@
+\documentclass[twocolumn]{article}
+\begin{document}
+\section{Introduction}
+
+We find ourselves caught in the snare of ever-increasing computational complexity. The demands of modern computation can bog down a general-purpose CPU to the point of impracticality\cite{skalicky}. Hardware accelerators are mechanisms used to mitigate such situations by offloading specific computational tasks to hardware. Developing optimized hardware solutions to replace software comes with the trade-off of increased development time due to the introduction of hardware's inherent lower abstraction levels. This increased overhead can often be prohibitive, thus it has been a dream of hardware designers since the 1970s to create tools that synthesize optimized hardware using traditional software development techniques\cite{1}. This dream tool would complete a process known as High Level Synthesis (HLS).
+
+In order to consider the dream realized, HLS must create optimized hardware using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. Unfortunately, due to reasons such as standardization\cite{ieee}, reliability\cite{tosun} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions (VHDL and Verilog) do not operate natively at the algorithmic level \cite{Harris+Harris}. This presents a problem: the most oft-used, best supported, languages for specifying synthesizable hardware do not behave like that of traditional compiled software. Instead, these two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}, and HLS seeks to bridge that gap.
+
+The development of HLS tools is not the focus of Homsirikamol and Gaj's study, rather they seek to validate the state of the HLS dream by comparing the performance of hardware generated using an RTL circuit description to that of an algorithmic, HLS, specification. This report will, first, explain the methodology used to conduct the case study and present its findings. Next, an evaluation of their conclusions will be presented alongside alternative methods of comparison, ultimately presenting a more complete picture of whether HLS is, or ever will be, a dream-come-true.
+
+\section{Summary of Selected Paper}
+
+This section will briefly summarize the claims presented by Homsirikamol and Gaj's study on the state of HLS.
+
+\subsection{Background}
+
+HLS is the process of converting an algorithmic level description to RTL. Therefore, in this context the term synthesis can be defined as a method for traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level, often written in a relatively high-level language like C, to a functionally equivalent representation in an RTL language like VHDL or Verilog.
+
+\subsection{Problem}
+
+Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above metrics for quality (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to make blanket statements of a tool's ability without, first, specifying the types of computational tasks each method is expected to synthesize. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard.
+
+\subsection{Proposal}
+
+Ultimately, the authors wish to demonstrate the quality of HLS by comparing the performance of circuits synthesized using a software description to circuits synthesized using an RTL description. In order to make a fair comparison, the authors need to make a case that the synthesis process was responsible for the changes in performance. This is accomplished by conducting their evaluations across multiple chip manufacturers and chip families, thus removing the target technology as a possible source of performance variability. The RTL language, FPGA tools and synthesis options were all held constant, leaving HLS as the claimed independent variable in the case study. 
+
+Using the above methodology, the authors ultimately create 
+
+
+\subsection{Evaluation}
+
+
+
+\subsection{Conclusion}
+\section{Analysis of Selected Paper}
+\subsection{Paper Strengths}
+
+Synthesis tools vary greatly across manufacturers and device families, therefore comparing implementations of synthesized designs becomes a delicate exercise. The authors present a case that their methodology for comparing synthesis performance is a fair one and this section explores that claim.
+
+\subsection{Paper Weaknesses}
+\subsection{Critique}
+\subsection{Future Work}
+\section{Conclusion}
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,../bibtex_files/RPC.bib,../bibtex_files/Connecting_Ideas,../bibtex_files/Rethink_Toward_GP_uF_Chips,../bibtex_files/mf.bib,../bibtex_files/ece.bib,../bibtex_files/sb.bib}
+\end{document}
+I. Intro
+II. Outline
+III. Summary of Selected Paper
+	IIIa. Problem
+	IIIb. Proposal
+	IIIc. Evaluation
+	IIId. Conclusion
+IV. Analysis of Selected Paper
+	IVa. Paper Strengths
+	IVb. Paper Weaknesses
+	IVc. Critique
+	IVd. Future Work
+V. Conclusion
+
