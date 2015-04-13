@@ -1,6 +1,11 @@
-\documentclass[11pt,journal,compsoc, onecolumn]{IEEEtran}
+\documentclass[12pt,journal,compsoc,onecolumn]{IEEEtran}
 %\documentclass[10pt, onecolumn]{article}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
 \usepackage{graphicx}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\lhead{Ryan Silva - HLS vs RTL in the Crypto Domain}
+%\renewcommand{\headrulewidth}{0.5pt}
 \usepackage{url}
 \usepackage{ifpdf}
 \usepackage[cmex10]{amsmath}
@@ -28,27 +33,152 @@
 
 \IEEEPARstart{W}{e} find ourselves caught in the snare of ever-increasing computational complexity, where the demands of modern computation can bog down a general-purpose CPU to the point of impracticality\cite{skalicky}. Hardware accelerators are mechanisms used to mitigate such situations by offloading specific computational tasks to hardware. Developing optimized hardware solutions to replace software comes with the trade-off of increased development time due to the introduction of hardware's inherent lower abstraction levels. This increased overhead can often be prohibitive, thus it has been a dream of hardware designers since the 1970s to create tools that synthesize optimized hardware using traditional software development techniques\cite{1}. This dream tool would complete a process known as High Level Synthesis (HLS).
 
-In order to consider the dream realized, HLS must create optimized hardware using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. Unfortunately, due to reasons such as standardization\cite{ieee}, reliability\cite{tosun} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions (VHDL and Verilog) do not operate natively at the algorithmic level \cite{Harris+Harris}. This presents a problem: the most oft-used, best supported, languages for specifying synthesizable hardware do not behave like that of traditional compiled software. Instead, these two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}, and HLS seeks to bridge that gap.
+In order to consider the dream realized, HLS must create optimized hardware using an abstract, algorithmic level description of a circuit as the primary input specification\cite{mcfarland}. Unfortunately, due to reasons such as standardization\cite{ieee}, reliability\cite{tosun} and portability\cite{churtl}, the two most ubiquitous languages for constructing hardware descriptions (VHDL and Verilog) do not operate natively at the algorithmic level \cite{Harris+Harris}. This presents a problem: the most oft-used, best supported, languages for specifying synthesizable hardware do not behave like that of traditional compiled software. Instead, these two languages operate at a level of abstraction known as the Register-Transfer Level (RTL), which is one level of abstraction below that of the algorithmic level \cite{vahid}. HLS seeks to bridge that gap.
 
-The development of HLS tools is not the focus of Homsirikamol and Gaj's study, rather they seek to validate the state of the HLS dream by comparing the performance of hardware generated using an RTL circuit description to that of an algorithmic, HLS, specification. This report will, first, explain the methodology used to conduct the case study and present its findings. Next, an evaluation of their conclusions will be presented alongside alternative methods of comparison. This report concludes with an analysis of what to expect from HLS in the future, ultimately presenting a more complete picture of whether HLS is, or ever will be, a dream-come-true.
+The development of HLS tools is not the focus of Homsirikamol and Gaj's study, rather they seek to validate the state of the HLS dream by comparing the performance of hardware generated using an RTL circuit description to that of an algorithmic, HLS, specification. This report will first explain the methodology used to conduct the case study and present its findings. Next, an evaluation of their conclusions will be presented alongside alternative methods of comparison. This report concludes with an analysis of what to expect from HLS in the future, ultimately presenting a more complete picture of whether HLS is, or ever will be, a dream-come-true.
+
+\section{Background}
+\subsection{HLS}\label{sec:hls}
+
+HLS is the process of converting an algorithmic level description to RTL. Therefore, in this context, the term synthesis can be defined as a method for traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level to a functionally equivalent representation in an RTL language like VHDL or Verilog. These algorithmic level descriptions are often written in a relatively high-level language, in this study that language is C, 
+
+\subsection{The Advanced Encryption Standard (AES) in Counter Mode}
+
+AES is a symmetric key block cipher encryption algorithm that operates on 128-bit blocks of data using keys of length 128, 192 or 256 bits; however, the authors chose to restrict their test designs to implementations of the algorithm using only 128-bit keys. The algorithm uses four main transformation functions on plaintext to provide cryptographic diffusion: SubBytes, ShiftRows, MixColumns and AddRoundKey. AES also transforms the key according to a function called Key Expansion.
+
+Recommendations for AES operating modes are described in \cite{14}. AES in Counter Mode (AES-CTR) is defined by the following:
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{l l l}
+	Encryption: & $O_j=CIPH_k(T_j)$ & for $j=1,2\dots n;$\\
+		 & $C_j=P_j\oplus O_j$ & for $j=1,2\dots n-1;$\\
+		 & $C^*_n=P^*_n\oplus MSB_u(O_n)$ & \\
+		 \\
+	Decryption: & $O_j=CIPH_k(T_j)$ & for $j=1,2\dots n;$\\
+		 & $P_j=C_j\oplus O_j$ & for $j=1,2\dots n-1;$\\
+		 & $P^*_n=C^*_n\oplus MSB_u(O_n)$ & 
+	\end{tabular}
+	\label{tab:ctr}
+\end{table}
+
+In the above definition, $O_j$ is the output of the forward AES cipher using distinct counter vectors, $T_j$, as the plaintext on which the cipher operates. $P_j$ is the plaintext and $C_j$ is the ciphertext. $P^*_n$ and $C^*_n$ are the plaintext and ciphertext for the final block. The final block need not be a complete 128-bit block for the cipher to work properly in counter mode. This property is useful for processing streaming data where the input text size is not guaranteed to be a multiple of 128\cite{15}\cite{16}. The most important attribute of AES-CTR in the context of this study is that an implementation of the inverse cipher, $CIPH^{-1}_k(T_j)$, is not required.
+
+%\subsubsection{ShiftRows}\label{sec:shiftrows}
+%The ShiftRows transformation is defined by the following operation\cite{13}:
+
+%\begin{equation}\label{eq:shiftrows}
+	%s^{'}_{r,c}=s_{r,(c+shift(r,4))\text{ mod }4} \text{ for } 0<r<4 \text{ and } 0\leq c<4 
+%\end{equation}
+%
+%\begin{equation}
+	%\text{Where } shift(1,4)=1\text{; } shift(2,4)=2\text{; } shift(3,4)=3
+%\end{equation}
+%
+%The variable $s$ in equation \ref{eq:shiftrows} is a 4x4 array of bytes called the \emph{state array}. This equation effectively describes a byte-wise rotation operation performed on each row of the array. The bytes are rotated left according to the row number (e.g., 0 rotations for row 0, 1 rotation for row 1, etc.). 
+%
+%The ShiftRows transformation is a function that is trivial to synthesize as reordering bytes in an array is an operation that is identical in both the algorithmic and RTL levels of abstraction.\cite{silva}. 
+%
+%\subsubsection{SubBytes}\label{sec:subbytes}
+%SubBytes is more complex to synthesize than ShiftRows, as it requires Euclid's Extended Algorithm to calculate multiplicative inversions in a finite field, which is an operation not natively found in RTL descriptions. The algorithm is used to compute the polynomial $b^{-1}(x)$ such that Equation \ref{eq:inversion} holds true:
+%\begin{equation}\label{eq:inversion}
+	%a(x)\cdot b(x)\text{ mod }m(x)=1
+%\end{equation}
+%Once the multiplicative inverse, labeled $x$ below, is found the value undergoes an affine transformation according to the operation defined in equation \ref{eq:affine}.
+%\begin{equation}\label{eq:affine}
+	%\begin{bmatrix}
+		%y_0 \\
+		%y_1 \\
+		%y_2 \\
+		%y_3 \\
+		%y_4 \\
+		%y_5 \\
+		%y_6 \\
+		%y_7 
+	%\end{bmatrix}
+	%=
+	%\begin{bmatrix}
+		%1 & 0 & 0 & 0 & 1 & 1 & 1 & 1 \\
+		%1 & 1 & 0 & 0 & 0 & 1 & 1 & 1 \\
+		%1 & 1 & 1 & 0 & 0 & 0 & 1 & 1 \\
+		%1 & 1 & 1 & 1 & 0 & 0 & 0 & 1 \\
+		%1 & 1 & 1 & 1 & 1 & 0 & 0 & 0 \\
+		%0 & 1 & 1 & 1 & 1 & 1 & 0 & 0 \\
+		%0 & 0 & 1 & 1 & 1 & 1 & 1 & 0 \\
+		%0 & 0 & 0 & 1 & 1 & 1 & 1 & 1 
+	%\end{bmatrix}
+	%\begin{bmatrix}
+		%x_0 \\
+		%x_1 \\
+		%x_2 \\
+		%x_3 \\
+		%x_4 \\
+		%x_5 \\
+		%x_6 \\
+		%x_7 
+	%\end{bmatrix}
+	%+
+	%\begin{bmatrix}
+		%1 \\
+		%1 \\
+		%0 \\
+		%0 \\
+		%0 \\
+		%1 \\
+		%1 \\
+		%0 
+	%\end{bmatrix}
+%\end{equation}	
+%
+%While these calculations would be computationally demanding to execute on the fly\cite{15}, it is important to note that SubBytes is performed on individual bytes; therefore, these calculations can be carried out by pre-computing all possible values and then referencing a 256-byte lookup table called a Rijndael S-box \cite{13}. The authors chose the S-Box method of implementing SubBytes in their HLS descriptions. 
+%\subsubsection{AddRoundKey}\label{sec:addroundkey}
+%The AddRoundKey transformation is accomplished through a bitwise XOR operation between the state matrix and the expanded key from a Key Expansion \cite{17}. Since bitwise XOR operations are identical in both the algorithmic and RTL levels of abstraction, HLS for the AddRoundKey transformation is a trivial task. 
+%
+%\subsubsection{Key Expansion}\label{sec:keyexpansion}
+%Unlike the other four AES transformations, Key Expansion is performed on the cipher key rather than plaintext. Key Expansion references the Rijndael S-box from Section \ref{sec:subbytes}, but also requires iterative byte-wise rotations and XOR operations with a table of constants. Since the operations for byte-wise substitutions, XORs and rotations are identical in the algorithmic and RTL domains, HLS for Key Expansion is trivial. 
+%
+%\subsubsection{MixColumns}\label{sec:mixcolumns}
+%MixColumns is accomplished by multiplying each four-byte column in the state array by a fixed polynomial, $a(x)=\text{\{03\}}x^3+\text{\{01\}}x^2+\text{\{01\}}x+\text{\{02\}}$, modulo $x^4+1$. This entire operation occurs within a Galois Field, $GF(2^8)$, which can be written as a matrix multiplication\cite{13}:
+%
+%\begin{equation}\label{eq:mixcolumns}
+	%s'(x)=a(x)\otimes s(x):\\
+	%\begin{bmatrix}
+		%s'_{0,c} \\
+		%s'_{1,c} \\
+		%s'_{2,c} \\
+		%s'_{3,c} 
+	%\end{bmatrix}
+	%=
+	%\begin{bmatrix}
+		%02 & 03 & 01 & 01 \\
+		%01 & 02 & 03 & 01 \\
+		%01 & 01 & 02 & 03 \\
+		%03 & 01 & 01 & 02 
+	%\end{bmatrix}
+	%\begin{bmatrix}
+		%s_{0,c} \\
+		%s_{1,c} \\
+		%s_{2,c} \\
+		%s_{3,c} 
+	%\end{bmatrix}
+	%\text{ for }
+	%0\leq c<4
+%\end{equation}
+%
+%The function described in Equation \ref{eq:mixcolumns} is one in which the methods of implementation could differ significantly from an HLS description to that of an RTL. Common methods of performing the MixColumns transformation include using a log/anti-log table (two 256-byte lookup tables) \cite{17}, using a simplifying function called \emph{xtime} boils down the above finite field arithmetic to iterative bit shifts and XOR operations. The latter method is used by the author to implement MixColumns for their design referred to as HLSv1..
 
 \section{Summary of Selected Paper}
-
-\subsection{Background}
-
-HLS is the process of converting an algorithmic level description to RTL. Therefore, in this context, the term synthesis can be defined as a method for traversing abstraction levels in hardware design. This is carried out by implementing a description found at higher levels of abstraction using only methods found in the lower \cite{churtl}. Specifically, HLS translates descriptions found at the algorithmic level, often written in a relatively high-level language, in this study that language is C, to a functionally equivalent representation in an RTL language like VHDL or Verilog.
-
 \subsection{Problem}
 
-Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above metrics for quality (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to make blanket statements of a tool's ability without, first, specifying the types of computational tasks each method is expected to synthesize. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard.
+Measuring the quality of HLS tools is a problem that requires a high degree of specificity in order to be useful. Quality has often been measured by simply investigating whether a complex circuit synthesized through HLS can achieve a desired functionality\cite{8}\cite{9}\cite{10}\cite{11}\cite{12}. Other studies \cite{3}\cite{4} seek to measure the quality of HLS by comparing the performance of an HLS circuit to its software implementation. The authors contend that neither of the above quality metrics (functionality or software comparison) paint a sufficient picture of the state of HLS, rather they claim that the quality of HLS is better assessed when compared to a circuit synthesized through traditional RTL synthesis. Additionally, since computational challenges vary greatly based on functional domain, Homsirikamol and Gaj claim that comparisons between HLS tools and RTL synthesis tools must be domain-specific, i.e., it is not useful to make blanket statements of a tool's ability without, first, specifying the types of computational tasks each method is expected to synthesize. The selected paper chooses to make an HLS-to-RTL comparison in the cryptographic domain, specifically comparing implementations of the Advanced Encryption Standard.
 
 \subsection{Proposal}
 
 Ultimately, the authors wish to demonstrate the quality of HLS by comparing the performance of circuits synthesized using a software description to circuits synthesized using an RTL description. Metrics used in the study to define performance included: area, frequency, throughput and efficiency (throughput per unit area). In order to make a fair comparison, the authors need to make a case that the synthesis process alone was responsible for performance changes. This was accomplished by conducting their evaluations across multiple chip manufacturers and device families, thus removing the target technology as a possible source of performance variability. The RTL language, FPGA tools and synthesis options were all held constant, leaving HLS as the claimed independent variable in the case study. 
 
-Using the above methodology, the authors used the AES reference design in ANSI C \cite{17} as a starting point for creating the study's HLS specifications. They, then, created three different implementations of AES, each optimized in a different fashion. The first, referred to as HLSv0, was streamlined by eliminating unnecessary code. The HLSv0 code was then optimized by modifying the methods implementing the actual algorithm; this design is called HLSv1. Finally, HLS synthesizer directives, called \emph{pragmas}, were added to the HLSv1 design, thus creating the last design referred to as HLSv2. The performance of each HLS design was measured against the baseline RTL design.
+Using the above methodology, the authors used the AES reference design in ANSI C \cite{17} as a starting point for creating the study's HLS specifications. They then created three different implementations of AES, each optimized in a different fashion. The first, referred to as HLSv0, was streamlined by eliminating unnecessary code. The HLSv0 code was then optimized by modifying the mathematical methods used to implement the Key Expansion and MixColumns transformations; this design is labeled HLSv1. Finally, HLS synthesizer directives, called \emph{pragmas}, were added to the HLSv1 design, thus creating the last design referred to as HLSv2. The performance of each HLS design was measured against the baseline RTL design.
 
-Three wrappers were then placed around the core AES implementations, thereby creating three distinct cryptographic systems; the performance of these systems underwent the performance analysis defined above. The three cryptographic systems included a twice-unrolled architecture of AES, whereby the AES core was, essentially, duplicated, an implementation of AES in counter mode (AES-CTR) and finally, an implementation of AES-CTR using an I/O-multiplexing communication protocol modified from a previous study\cite{20}.
+Three wrappers were then placed around the core AES implementations, thereby creating three distinct cryptographic systems; the performance of these systems underwent the performance analysis defined above. The three cryptographic systems included a twice-unrolled architecture of AES, whereby the AES core was essentially duplicated, an implementation of AES in counter mode (AES-CTR) and finally, an implementation of AES-CTR using an I/O-multiplexing communication protocol modified from a previous study\cite{20}.
 
 %As Homsirikamol and Gaj limited their analysis to AES using a 128-bit key, they removed all structures in the reference code supporting other key lengths. AES-CTR does not require the inverse cipher and, thus, they removed all code supporting decryption\cite{sel}. This streamlined AES code is used as the baseline input to HLS and is referred to by the authors as HLSv0. The reference design is iterated upon using two optimization techniques, one optimizes the manner in which AES is implemented, while the other optimizes the C-code using HLS directives, called pragmas. These optimized designs are referred to as HLSv1 and HLSv2, respectively.
 
@@ -84,14 +214,14 @@ HLS is described by the authors as ``a next step in the development of modern ha
 \subsubsection{Controlling External Influences}
 Studies claiming to investigate the state of HLS must present convincing evidence that performance improvements or degradations were caused by HLS and not another external influence. Since synthesis tools vary greatly across manufacturers and device families, comparing implementations of synthesized designs becomes a delicate exercise. The authors present a case that their methodology for comparing synthesis performance is a fair one and this section explores that claim.
 
-Common experimental oversights can include not controlling the target technology as seen in \cite{skalicky} and not controlling proprietary FPGA resources as in \cite{10}. Homsirikamol and Gaj were careful to design controls for the former of the above two experimental oversights by synthesizing their designs using multiple chip manufacturers (Xilinx and Altera) and across multiple chip families (high-end and low-end family from each manufacturer). They addressed the latter oversight by instituting strict directives to the synthesis tools forbidding the use of dedicated FPGA resources, although these directives were ignored by the synthesizer on two occasions (HLS inferred a BRAM when synthesizing the HLSv0 and HLSv1 designs).
+Common experimental oversights include failing to approach the target technology as a variable that needs to be controlled, as seen in \cite{skalicky}. Also, some studies do not control proprietary FPGA resources as in \cite{10}. Homsirikamol and Gaj were careful to design controls for the former of the above two experimental oversights by synthesizing their designs using multiple chip manufacturers (Xilinx and Altera) and across multiple chip families (high-end and low-end family from each manufacturer). They addressed the latter oversight by instituting strict directives to the synthesis tools forbidding the use of dedicated FPGA resources, although these directives were ignored by the synthesizer on two occasions (HLS inferred a BRAM when synthesizing the HLSv0 and HLSv1 designs).
 
 \subsection{Paper Weaknesses}\label{sec:weaknesses}
 \subsubsection{Clock Frequency as a Metric}
 Maximizing clock frequency is not a useful metric in isolation. Rather it is useful as a component of calculating throughput. One may argue that the block size multiplier in Equations \ref{eq:rtllat} and \ref{eq:hlslat} dictates that increasing the clock frequency is the most lucrative venture in terms of increasing a design's throughput. While the math does suggest this to be the case, the results of the study indicate that increasing the clock frequency using HLS comes at such a severe cost in latency that it overwhelms the coefficient in the numerator.
 
 \subsubsection{RTL Optimization}\label{sec:rtlop}
-While the authors set a high bar for comparison, as articulated in Section \ref{sec:highbar}, they appear to limit their efforts to optimize the study's RTL designs. The authors create three different designs for HLS, each optimizing a different aspect of the C code but the RTL code was never specified beyond naming the utilized HDL and presenting a generalized block diagram outlining the design's architecture. Important design decisions and modifications to the RTL descriptions, if any, were conspicuously missing from the document. For example, did the RTL design use an S-Box (look-up table) to accomplish SubBytes or did it calculate the affine transform on the fly? Did the RTL design use \emph{xtime()}, a log/antilog table or something else to calculate MixColumns? 
+While the authors set a high bar for comparison, as articulated in Section \ref{sec:highbar}, they appear to limit their efforts to optimize the study's RTL designs. The authors create three different designs for HLS, each optimizing a different aspect of the C code. However, the RTL code was never specified beyond naming the utilized HDL and presenting a generalized block diagram outlining the design's architecture. Important design decisions and modifications to the RTL descriptions, if any, were conspicuously missing from the document. For example, did the RTL design use an S-Box (look-up table) to accomplish SubBytes or did it calculate the affine transform on the fly? Did the RTL design use the \emph{xtime()} function, a log/antilog table or something else to calculate MixColumns? 
 
 In the presence of this ambiguity, it can be assumed that no serious efforts were made to optimize the RTL designs. This is troubling for the HLS cause as the performance of the (assumed) unoptimized RTL designs still outperforms that of the optimized algorithmic level descriptions in all metrics, save the AES-CTR implementation described in Section \ref{sec:evaluation}.
 
@@ -101,28 +231,29 @@ The most glaring shortcoming of this study is eluded to in Section \ref{sec:rtlo
 Equation \ref{eq:rtllat} infers that the RTL design used in Homsirikamol and Gaj's study already parallelizes the computation of the subsequent data block's first round key (\emph{round\_key(0)} of \emph{block(i+1)}) with the computation of the last AES round for the current block(\emph{block(i)}). Given the performance benefits of parallelization demonstrated in the NSA study, one is left to wonder why the authors ceased their parallelization efforts at this point. One possible answer to the question is that given the difficulty of HLS to infer parallelism, as outlined in Section \ref{sec:future}, a performance analysis pitting a pipelined RTL design with an optimized HLS description would not be fair in terms of throughput. This is based on the fact that a pipelined RTL design implemented on 2000-era technology using 2000-era tools still managed to outperform the best HLS-based solution in this study (4520 Mbps compared to 5745.06 Mbps\cite{nsaweeks}, or +27.1\%). 
 
 While it may be true that a fair comparison cannot be made between HLS designs and those of parallelized RTL in terms of throughput it would still be interesting to investigate how the two compare in terms of efficiency, as the parallelized RTL design in \cite{nsaweeks} is over 568\% larger in transistor count than the iterative design. 
+
 \subsection{Critique}
-The working level of abstraction is defined as the lowest level presented to the designer \cite{Harris+Harris}, therefore a design process should not claim to operate at a level of abstraction higher than the lowest layer presented to the designer. HLS is defined as hardware synthesis at the algorithmic level of abstraction \cite{3}\cite{4}. It can be argued that Homsirikamol and Gaj achieved their largest performance gains through the use of pragmas. Does the use of pragmas present the designer with a level of abstraction that contradicts the definition of HLS? In order to find out, a working definition of the RTL and algorithmic abstraction level must be presented.
+The working level of abstraction is defined as the lowest level presented to the designer \cite{Harris+Harris}, therefore a design process should not claim to operate at a level of abstraction higher than the lowest layer presented to the designer. HLS is defined as hardware synthesis at the algorithmic level of abstraction \cite{3}\cite{4}. It can be argued that Homsirikamol and Gaj achieved their largest performance gains through the use of pragmas. Does the use of pragmas present the designer with a level of abstraction lower than the algorithmic, thereby contradicting the definition of HLS? In order to find out, a working definition of the RTL and algorithmic abstraction level must be presented.
 
-The Register Transfer Level of abstraction differs from that of the algorithmic in that RTL, as the name implies, specifies the movement of data between registers and the combinational processes that occur  between. Unlike RTL, the algorithmic level of abstraction has no concept of a clock or specific delays, rather this abstraction level executes a sequence of instructions in order to accomplish computational tasks\cite{churtl}. Furthermore, \textbf{architecture is implicit for HLS designs}\cite{bsv}, which stands in stark contrast with the authors' conclusion that HLS is efficient in some aspects ``so long as the designer has a target architecture in mind.'' 
+As an abstraction level, RTL differs from that of the algorithmic level in that RTL, as the name implies, specifies the movement of bits between registers and the combinational processes that occur  between. Unlike RTL, the algorithmic level of abstraction has no concept of a clock or specific delays, rather this abstraction level executes a sequence of instructions in order to accomplish computational tasks\cite{churtl}. Furthermore, \textbf{architecture is implicit for HLS designs}\cite{bsv}, which stands in stark contrast with the authors' conclusion that HLS is efficient in some aspects ``so long as the designer has a target architecture in mind.'' 
 
-HLS claims to abstract away architecture by registering data in a similar fashion to that of software\cite{legup}. Software operating at the algorithmic level treats memory as a either a single, addressable repository of instructions and data (Von Neumann Architecture) or as two separate banks of information, one for storing instructions and one for data (Harvard Architecture). Some algorithmic-level software languages like C and C++ use pointers or address labels to interact with memory elements \cite{cpointers}. Optimizing these sequential memory interactions presents significant challenges to the performance of HLS circuits, which will be elaborated upon in Section \ref{sec:future}.
+HLS claims to abstract away architecture by registering data in a similar fashion to that of software\cite{legup}. Software operating at the algorithmic level treats memory as a either a single, addressable repository of instructions and data (Von Neumann Architecture) or as two separate banks of information, one for storing instructions and one for data (Harvard Architecture). Some algorithmic-level software languages like C and C++ use pointers or address labels to interact with memory elements \cite{cpointers}. Optimizing these sequential memory interactions present significant challenges to the performance of HLS circuits, which will be elaborated upon in Section \ref{sec:future}.
 
-The use of pragmas that focus on reducing latency by explicitly defining operations executed per clock cycle, such as \textbf{INLINE} and \textbf{ARRAY\_RESHAPE}, by definition, lower the level of abstraction from algorithmic to RTL. Even though Homsirikamol and Gaj use pragmas to reduce latency, they ultimately lower the working level of abstraction from the algorithmic level to RTL. Therefore, the study did not perform an HLS-to-RTL comparison, as it claims; rather, the study compared two circuits synthesized using RTL circuit descriptions. 
+The use of pragmas that focus on reducing latency by explicitly defining operations executed per clock cycle, such as \textbf{INLINE} and \textbf{ARRAY\_RESHAPE}, by definition, lower the level of abstraction from algorithmic to RTL. The use of pragmas were effective in reducing latency but they also lowered the working level of abstraction from the algorithmic level to RTL. Therefore, it could be argued the study did not, in fact, perform an HLS-to-RTL comparison as it claims; rather, the study actually compares two circuits synthesized using RTL descriptions. 
 
 \subsection{Future Work}\label{sec:future}
-Since the HLS dream has yet to be realized, at least in the cryptographic \cite{sel} or matrix-multiplication \cite{skalicky} domains, what should hardware engineers expect from HLS in the future? The answer appears to be not much. Fundamental flaws in the HLS dream seem to erode expectations of HLS ever operating in the manner in which it was intended. Two main issues confronting HLS are performance and the ability of software descriptions to be synthesized. 
+Since the HLS dream has yet to be fully realized, at least in the cryptographic domain, what should hardware engineers expect from HLS in the future? The answer appears to be not much. Fundamental flaws in the HLS dream seem to erode expectations of HLS ever operating in the manner in which it was intended.  
 
-The missing performance component holding back the dream of creating optimized hardware from a software language intended for sequential execution is automatic parallelization, which has been described as the ``holy grail'' of parallel computing \cite{holygrail}. As shown in Section \ref{sec:parallel}, parallelization can significantly improve the performance of a hardware design. The issue HLS is up against is the fact that software languages were originally designed to be performed sequentially on a general-purpose CPU, and thus the HLS-supported C-based languages were not designed with parallelization in mind \cite{clanguage}. Plus, the addition of architectural detail in a high-level language can result in decreased speed (i.e., inferring more registers increases latency) and mitigating these effects leads to development time \cite{bsv}, all of which are the metrics HLS is supposed to dramatically improve. 
-It would be useful to develop an automated process to tease out implicit parallelization from this serial software. Unfortunately, since C uses pointers to reference memory \cite{cpointers}, the complexity involved with automatically extracting parallelism while guaranteeing that a memory location will not be asked to store two different values at the same time has been shown to be NP-Hard\cite{aliasinghard}. Even if pointers were carefully managed, or somehow avoided completely, the use of dynamic storage and recursive data structures in software presents the same memory-management dilemma that has been shown to be at least undecidable and at wost uncomputable \cite{staticanalysis}. If parallelization cannot be inferred automatically, then it must be specified explicitly, thereby lowering the level of abstraction from the algorithmic level back to RTL. If not for raising levels of abstraction what, then, is the case for using HLS as opposed to RTL?  
+The missing performance component holding back the dream of creating optimized hardware from a software language intended for sequential execution is automatic parallelization, which has been described as the ``holy grail'' of parallel computing \cite{holygrail}. As shown in Section \ref{sec:parallel}, parallelization can significantly improve the performance of a hardware design. The issue HLS is up against is the fact that software languages were originally designed to be performed sequentially on a general-purpose CPU, and thus the HLS-supported C-based languages were not designed with parallelization in mind \cite{clanguage}. Plus, the addition of architectural detail in a high-level language can negatively impact throughput (i.e., inferring more registers increases latency) and mitigating this effect increases development time \cite{bsv}, all of which are the metrics HLS is supposed to improve. 
 
-One might contend, as Homsirikamol and Gaj elude to in their conclusions, that raising design abstraction under some conditions is better than not raising it at all. In other words, why not use HLS to reduce development time and sacrifice the performance boosts associated with pipelining? This trade-off appears reasonable until it is put into practice. The original promise of HLS, i.e., creating optimized hardware from a software description \cite{3}, seems to imply that one can write code targeting HLS the same way one can write code targeting traditional compilation. Unfortunately, not all language constructs are synthesizable. For example, C++ is supported by the Vivado HLS tool \cite{vivado} and C++ (targeting compilation) supports object-oriented capabilities such as inheritance \cite{c++datamodel}, but does that mean a hardware designer (targeting HLS) can use all properties of inheritance like virtual subclass destructors? The answer is no \cite{c++hls}. This, then, creates subsets of software languages that are appropriate for synthesis. The issue then becomes knowing the difference between language constructs that are appropriate for synthesis versus those that are not. Currently, the solution is to define standard language constructs suitable for RTL synthesis \cite{ieeeverilog}, thus separating the synthesizable subset from the rest of the language. This solution is valid provided that the hardware engineer has deep knowledge of the standard as well as an understanding of the synthesizer's behavior. These requirements seem to defeat the purpose of the original HLS dream and serves to increase development time rather than reduce it.
+It would be useful to develop an automated process that teases out implicit parallelization from this sequential software description. Unfortunately, since C uses pointers to reference memory \cite{cpointers}, the complexity involved with automatically extracting parallelism while guaranteeing that a memory location will not be asked to store two different values at the same time has been shown to be NP-Hard\cite{aliasinghard}. Even if pointers were carefully managed, or somehow avoided completely, the use of dynamic storage and recursive data structures in software presents the same memory-management dilemma that has been shown to be at least undecidable and at wost uncomputable \cite{staticanalysis}. If parallelization cannot be inferred automatically, then it must be specified explicitly, thereby lowering the level of abstraction from the algorithmic level back to RTL. If not for raising levels of abstraction what, then, is the case for using HLS as opposed to RTL?  
+
+One might contend, as Homsirikamol and Gaj elude to in their conclusions, that raising design abstraction under some conditions is better than not raising it at all. In other words, why not use HLS to reduce development time and sacrifice the performance boosts associated with pipelining? This trade-off appears reasonable until it is put into practice. The original promise of HLS, i.e., creating optimized hardware from a software description \cite{3}, seems to imply that one can write code targeting HLS the same way one can write code targeting traditional compilation. Unfortunately, not all language constructs are synthesizable. For example, C++ is supported by the Vivado HLS tool \cite{vivado} and C++ (targeting compilation) supports object-oriented capabilities such as inheritance \cite{c++datamodel}, but does that mean a hardware designer (targeting HLS) can use all properties of inheritance like virtual subclass destructors? The answer is no \cite{c++hls}. This, then, creates subsets of software languages that are appropriate for synthesis. The issue then becomes knowing the difference between language constructs that are appropriate for synthesis versus those that are not. Currently, the solution is to define a standard for language constructs that are suitable for RTL synthesis \cite{ieeeverilog}, thus separating the synthesizable subset from the rest of the language. This solution is valid provided that the hardware engineer has deep knowledge of the standard as well as an understanding of the synthesizer's behavior. These requirements seem to defeat the purpose of the original HLS dream and serves to increase development time rather than reduce it.
 
 \section{Conclusion}
-Homsirikamol and Gaj ultimately conclude that HLS can generate results comparable to RTL while significantly lowering development time. They further claim that the time saved using HLS can be used by the designer to hand-optimize problematic or critical modules. For the authors' claim to hold water, HLS should be able to achieve good results while being utilized in the manner for which it was intended: designing hardware at a higher level of abstraction. Their claim hinges so precariously on higher abstraction because this is the only stated means of reducing development time. As shown in Section \ref{sec:weaknesses}, the authors violate the intent 
+Homsirikamol and Gaj ultimately conclude that HLS can generate results comparable to RTL while significantly lowering development time. They further claim that the time saved using HLS can be used by the designer to hand-optimize problematic or critical modules. For the authors' claim maintain consistency, HLS should be able to achieve good results while being utilized in the manner for which it was intended: designing hardware at a higher level of abstraction. Their claim hinges so precariously on higher abstraction because this is the only stated means of reducing development time. As shown in Section \ref{sec:weaknesses}, the authors seem to contradict this intent through the use of pragmas that effectively lower the level of abstraction. surprise
 
-
-Based on the bleak future presented in Section \ref{sec:future}, it can be concluded that HLS is, at best, a zero-sum game and, at worst, a costly distraction.
+Based on the bleak future for HLS presented in Section \ref{sec:future}, it can be argued that HLS is, at best, a zero-sum game and, at worst, a costly distraction.
 
 \bibliographystyle{IEEEtran}
 \bibliography{IEEEabrv,../bibtex_files/RPC.bib,../bibtex_files/Connecting_Ideas,../bibtex_files/Rethink_Toward_GP_uF_Chips,../bibtex_files/mf.bib,../bibtex_files/ece.bib,../bibtex_files/sb.bib}
